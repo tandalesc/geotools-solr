@@ -9,8 +9,12 @@ import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.schema.SchemaRequest;
 import org.apache.solr.client.solrj.response.schema.SchemaResponse;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
+import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.feature.simple.SimpleFeatureType;
 
+import java.awt.*;
+import java.util.Date;
 import java.util.Map;
 import java.util.List;
 
@@ -57,8 +61,8 @@ public class SolrDataTest {
         try {
             response = request.process(solr_server);
         } catch(Exception e) {
-            System.err.println("Could not connect to server!");
-            e.printStackTrace();
+            System.err.println("Could not connect to server! Is it running?");
+            if(debug) e.printStackTrace();
             return; //exit if error
         }
         //if successful, store as a List of Maps
@@ -72,19 +76,31 @@ public class SolrDataTest {
         }
         /////////////////////////////////////////////////////////////////////////
 
-        //build SFT
+        //add fields to SFT
+        //TODO GeoMesa/GeoTools can do all this for you!
         SimpleFeatureTypeBuilder b = new SimpleFeatureTypeBuilder();
         b.setName(solr_core_name);
         for( Map<String, Object> m: solr_fields) {
             String name = (String) m.get("name"),
                     type = (String) m.get("type");
+
             //required for point geometry
             if(name.equals("geom"))
                 b.setCRS(DefaultGeographicCRS.WGS84);
-            /*TODO: add name,type pairs to SFT (needs a Java class as a type,
-                so we need to parse the given name and type strings*/
+
             b.add(name, parseTypeName(name, type));
         }
+
+        //build SFT
+        SimpleFeatureType sft = b.buildFeatureType();
+
+        /////////////////////////////////////////////////////////////////////////
+        if(debug) {
+            System.out.println("Generated SFT:");
+            for(int i = 0; i < sft.getAttributeCount(); i++)
+                System.out.println("\t"+sft.getType(i));
+        }
+        /////////////////////////////////////////////////////////////////////////
 
         //execute query
         SolrResponse q_r;
@@ -92,7 +108,7 @@ public class SolrDataTest {
             q_r = (new QueryRequest(all_query)).process(solr_server);
         } catch(Exception e) {
             System.err.println("Could not connect to server!");
-            e.printStackTrace();
+            if(debug) e.printStackTrace();
             return; //exit if error
         }
 
@@ -148,7 +164,17 @@ public class SolrDataTest {
      * Java class which is a best match for the given Solr field
      */
     private static Class parseTypeName(String name, String typename) {
-        //TODO: Actually finish this method stub and return the right Java.class for each name/type
-        return Object.class;
+        //TODO Geomesa has built-in functions to do this for you!
+        //see https://github.com/geotools/geotools/blob/master/modules/library/main/src/main/java/org/geotools/data/DataUtilities.java#L209
+        String type_lc = typename.toLowerCase(), name_lc = name.toLowerCase();
+
+        if(name_lc.contains("geom")) return Point.class;
+        if(name_lc.contains("date")) return Date.class;
+
+        if(type_lc.contains("long")) return Long.class;
+        if(type_lc.contains("double")) return Double.class;
+
+        //default
+        return String.class;
     }
 }
