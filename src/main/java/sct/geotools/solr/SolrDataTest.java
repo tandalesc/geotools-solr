@@ -1,5 +1,6 @@
 package sct.geotools.solr;
 
+import org.apache.commons.jxpath.ri.model.beans.NullPointer;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
@@ -8,13 +9,16 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.schema.SchemaRequest;
 import org.apache.solr.client.solrj.response.schema.SchemaResponse;
+import org.geotools.data.AttributeReader;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
-import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeDescriptor;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
@@ -120,7 +124,8 @@ public class SolrDataTest {
         }
         /////////////////////////////////////////////////////////////////////////
 
-        //TODO: Retrieve the correct values in a format GeoTools likes.
+
+
     }
 
     /**
@@ -176,5 +181,42 @@ public class SolrDataTest {
 
         //default
         return String.class;
+    }
+
+    private class SolrAttributeReader implements AttributeReader {
+      //  NamedList<>
+        SolrAttributeReader(SolrResponse qr) {
+          //  qr.
+        }
+
+        @Override
+        public int getAttributeCount() {
+            return 0;
+        }
+
+        @Override
+        public AttributeDescriptor getAttributeType(int i) throws ArrayIndexOutOfBoundsException {
+            return null;
+        }
+
+        @Override
+        public void close() throws IOException {
+
+        }
+
+        @Override
+        public boolean hasNext() throws IOException {
+            return false;
+        }
+
+        @Override
+        public void next() throws IOException {
+
+        }
+
+        @Override
+        public Object read(int i) throws IOException, ArrayIndexOutOfBoundsException {
+            return null;
+        }
     }
 }
